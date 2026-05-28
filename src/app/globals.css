@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 215 92% 43%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 94%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 164 86% 31%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 215 92% 43%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 230 30% 8%;
+    --foreground: 0 0% 98%;
+    --card: 230 30% 11%;
+    --card-foreground: 0 0% 98%;
+    --popover: 230 30% 11%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 22 100% 60%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 230 25% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 230 25% 16%;
+    --muted-foreground: 230 10% 65%;
+    --accent: 168 70% 40%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 230 20% 22%;
+    --input: 230 20% 22%;
+    --ring: 22 100% 60%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; font-feature-settings: "rlig" 1, "calt" 1; }
+  ::selection { background: hsl(var(--primary) / 0.25); }
+}
+
+@layer components {
+  .gradient-saffron {
+    background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gradient-bg-hero {
+    background:
+      linear-gradient(180deg, rgba(239, 246, 255, 0.96) 0%, rgba(248, 250, 252, 1) 68%),
+      radial-gradient(circle at 14% 18%, rgba(37, 99, 235, 0.14) 0%, transparent 36%),
+      radial-gradient(circle at 86% 18%, rgba(15, 118, 110, 0.13) 0%, transparent 34%);
+  }
+
+  .app-shell {
+    background:
+      linear-gradient(180deg, rgba(248, 250, 252, 1), rgba(241, 245, 249, 1));
+  }
+
+  .metric-card {
+    @apply rounded-lg border bg-white p-4 shadow-sm;
+  }
+}
