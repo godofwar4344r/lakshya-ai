@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Lock, Mail, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,15 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        window.location.href = "/workspace";
+      }
+    });
+  }, []);
 
   async function submit() {
     setLoading(true);

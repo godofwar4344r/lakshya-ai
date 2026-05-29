@@ -55,7 +55,7 @@ export const learningLevels: LearningLevel[] = [
     teacherOutcome: "Design stronger assignments, compare explanations, and guide responsible research.",
     studentOutcome: "Use AI to research, verify, summarize, and improve your own thinking.",
     tools: [
-      { name: "Claude", description: "Long-form reasoning, writing review, and thoughtful classroom content.", icon: Brain },
+      { name: "NotebookLM", description: "Create a summarized notebook, audio guide, or study notes from school texts.", icon: Brain },
       { name: "Perplexity", description: "Research with links, citations, and current-source discovery.", icon: Search },
       { name: "Grok", description: "Fast idea exploration, debate prompts, and alternative viewpoints.", icon: Bot },
     ],
