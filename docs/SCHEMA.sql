@@ -1,119 +1,110 @@
--- Lakshya AI · Supabase schema
--- Run this in Supabase SQL Editor after creating the project.
+-- Lakshya AI Supabase schema
+-- Project: edu ai
 
--- Institutions
-create table if not exists institutions (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  city text not null,
-  state text not null,
-  type text not null check (type in ('school', 'college', 'university')),
-  logo_url text,
-  total_score int not null default 0,
-  created_at timestamptz default now()
-);
-
--- Profiles (extends Supabase auth.users)
-create table if not exists profiles (
+create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
-  role text not null check (role in ('teacher', 'student', 'admin')),
-  institution_id uuid references institutions(id),
-  grade text,           -- for students
-  subject text,         -- for teachers
-  xp int not null default 0,
-  created_at timestamptz default now()
+  role text not null check (role in ('teacher', 'student')),
+  points integer not null default 0,
+  level integer not null default 1 check (level in (1, 2, 3)),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
--- Teacher AI tool usage log
-create table if not exists ai_tool_uses (
+create table if not exists public.learning_progress (
   id uuid primary key default gen_random_uuid(),
-  teacher_id uuid references profiles(id) on delete cascade,
-  institution_id uuid references institutions(id),
-  tool text not null check (tool in ('lesson_plan', 'quiz', 'explainer')),
-  input jsonb not null,
-  output text not null,
-  created_at timestamptz default now()
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  level integer not null check (level in (1, 2, 3)),
+  module_key text not null,
+  completed_at timestamptz not null default now(),
+  unique (user_id, level, module_key)
 );
 
--- Challenges
-create table if not exists challenges (
+create table if not exists public.quiz_attempts (
   id uuid primary key default gen_random_uuid(),
-  title text not null,
-  brief text not null,
-  category text not null check (category in ('prompt-engineering', 'ai-ethics', 'ai-build', 'ai-solve')),
-  difficulty text not null check (difficulty in ('beginner', 'intermediate', 'advanced')),
-  points_reward int not null default 100,
-  deadline timestamptz,
-  is_active boolean default true,
-  created_at timestamptz default now()
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  level integer not null check (level in (1, 2, 3)),
+  score integer not null default 0,
+  max_score integer not null default 5,
+  points_awarded integer not null default 0,
+  created_at timestamptz not null default now()
 );
 
--- Submissions
-create table if not exists submissions (
+create table if not exists public.point_events (
   id uuid primary key default gen_random_uuid(),
-  challenge_id uuid references challenges(id) on delete cascade,
-  student_id uuid references profiles(id) on delete cascade,
-  institution_id uuid references institutions(id),
-  content text not null,
-  score int,
-  feedback jsonb,
-  created_at timestamptz default now()
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  event_type text not null check (event_type in ('module_complete', 'quiz_passed', 'tool_used', 'manual_adjustment')),
+  points integer not null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
 );
 
--- Helper view: institution leaderboard
-create or replace view institution_leaderboard as
-select
-  i.id,
-  i.name,
-  i.city,
-  i.state,
-  i.type,
-  i.logo_url,
-  i.total_score,
-  count(distinct p_t.id) filter (where p_t.role = 'teacher') as teacher_count,
-  count(distinct p_s.id) filter (where p_s.role = 'student') as student_count,
-  count(distinct s.id) as wins,
-  rank() over (order by i.total_score desc) as rank
-from institutions i
-left join profiles p_t on p_t.institution_id = i.id and p_t.role = 'teacher'
-left join profiles p_s on p_s.institution_id = i.id and p_s.role = 'student'
-left join submissions s on s.institution_id = i.id and s.score >= 70
-group by i.id;
+create table if not exists public.tool_usage (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  tool_name text not null,
+  level integer not null check (level in (1, 2, 3)),
+  prompt text,
+  response text,
+  created_at timestamptz not null default now()
+);
 
--- Function: bump institution score after a submission scored
-create or replace function bump_institution_score()
-returns trigger as $$
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
 begin
-  if new.score is not null and (old.score is null or old.score is distinct from new.score) then
-    update institutions set total_score = total_score + new.score where id = new.institution_id;
-    update profiles set xp = xp + new.score where id = new.student_id;
-  end if;
+  new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
-drop trigger if exists trg_submission_score on submissions;
-create trigger trg_submission_score
-after insert or update of score on submissions
-for each row execute function bump_institution_score();
+drop trigger if exists profiles_set_updated_at on public.profiles;
+create trigger profiles_set_updated_at
+before update on public.profiles
+for each row execute function public.set_updated_at();
 
--- RLS
-alter table profiles enable row level security;
-alter table institutions enable row level security;
-alter table ai_tool_uses enable row level security;
-alter table challenges enable row level security;
-alter table submissions enable row level security;
+create or replace function public.refresh_profile_points()
+returns trigger
+language plpgsql
+as $$
+begin
+  update public.profiles
+  set
+    points = greatest(0, coalesce((select sum(points) from public.point_events where user_id = coalesce(new.user_id, old.user_id)), 0)),
+    level = case
+      when coalesce((select sum(points) from public.point_events where user_id = coalesce(new.user_id, old.user_id)), 0) >= 750 then 3
+      when coalesce((select sum(points) from public.point_events where user_id = coalesce(new.user_id, old.user_id)), 0) >= 300 then 2
+      else 1
+    end
+  where id = coalesce(new.user_id, old.user_id);
+  return coalesce(new, old);
+end;
+$$;
 
--- Everyone can read public data
-create policy "public read institutions" on institutions for select using (true);
-create policy "public read challenges" on challenges for select using (true);
-create policy "public read leaderboard" on profiles for select using (true);
+drop trigger if exists point_events_refresh_profile on public.point_events;
+create trigger point_events_refresh_profile
+after insert or update or delete on public.point_events
+for each row execute function public.refresh_profile_points();
 
--- Authenticated users can write their own data
-create policy "self insert profile" on profiles for insert with check (auth.uid() = id);
-create policy "self update profile" on profiles for update using (auth.uid() = id);
-create policy "self insert tool use" on ai_tool_uses for insert with check (auth.uid() = teacher_id);
-create policy "self read tool use" on ai_tool_uses for select using (auth.uid() = teacher_id);
-create policy "self insert submission" on submissions for insert with check (auth.uid() = student_id);
-create policy "all read submissions" on submissions for select using (true);
+alter table public.profiles enable row level security;
+alter table public.learning_progress enable row level security;
+alter table public.quiz_attempts enable row level security;
+alter table public.point_events enable row level security;
+alter table public.tool_usage enable row level security;
+
+create policy "profiles self read" on public.profiles for select using (auth.uid() = id);
+create policy "profiles self insert" on public.profiles for insert with check (auth.uid() = id);
+create policy "profiles self update" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
+
+create policy "learning self read" on public.learning_progress for select using (auth.uid() = user_id);
+create policy "learning self insert" on public.learning_progress for insert with check (auth.uid() = user_id);
+
+create policy "quiz self read" on public.quiz_attempts for select using (auth.uid() = user_id);
+create policy "quiz self insert" on public.quiz_attempts for insert with check (auth.uid() = user_id);
+
+create policy "points self read" on public.point_events for select using (auth.uid() = user_id);
+create policy "points self insert" on public.point_events for insert with check (auth.uid() = user_id);
+
+create policy "tool self read" on public.tool_usage for select using (auth.uid() = user_id);
+create policy "tool self insert" on public.tool_usage for insert with check (auth.uid() = user_id);

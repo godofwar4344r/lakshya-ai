@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function RedirectPage() {
-  redirect("/workspace?role=teacher");
+export default function TeacherPage() {
+  redirect("/workspace");
 }

@@ -1,51 +1,14 @@
 import Link from "next/link";
+import { ArrowRight, BookOpen, Brain, CheckCircle2, Download, GraduationCap, Lock, PlayCircle, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpen,
-  Brain,
-  CheckCircle2,
-  Gauge,
-  GraduationCap,
-  LineChart,
-  PlayCircle,
-  Sparkles,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { learningLevels, safetyPillars } from "@/lib/curriculum";
 
-const journey = [
-  {
-    title: "Learn AI",
-    text: "Short awareness modules help teachers and students understand what AI is, where it helps, and where it must be used carefully.",
-    icon: BookOpen,
-  },
-  {
-    title: "Use AI",
-    text: "Teachers generate lesson plans, quizzes, and explainers while students complete weekly AI challenges with instant feedback.",
-    icon: Sparkles,
-  },
-  {
-    title: "Measure AI readiness",
-    text: "Admins see adoption, participation, challenge scores, and a simple readiness score they can improve every week.",
-    icon: Gauge,
-  },
-];
-
-const metrics = [
-  { label: "Teachers active", value: "38", delta: "+18% this week" },
-  { label: "Students onboarded", value: "487", delta: "72% participation" },
-  { label: "AI readiness", value: "78", delta: "+12 points" },
-  { label: "Challenges completed", value: "1,284", delta: "across 4 tracks" },
-];
-
-const leaderboard = [
-  { rank: 1, name: "Delhi Public School, R.K. Puram", score: 9840 },
-  { rank: 2, name: "DPS Dwarka", score: 9620 },
-  { rank: 3, name: "IIMT University", score: 9485, highlight: true },
-  { rank: 4, name: "Vellore Institute of Technology", score: 9210 },
+const stats = [
+  { label: "Learning levels", value: "3" },
+  { label: "Starter AI tools", value: "2" },
+  { label: "Weekly quiz attempts", value: "2" },
+  { label: "Leaderboard", value: "Soon" },
 ];
 
 export default function LandingPage() {
@@ -58,170 +21,149 @@ export default function LandingPage() {
             <span className="font-display text-xl font-semibold">Lakshya AI</span>
           </Link>
           <div className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-            <Link href="#platform" className="hover:text-foreground">Platform</Link>
-            <Link href="#outcome" className="hover:text-foreground">Outcome</Link>
-            <Link href="/leaderboard" className="hover:text-foreground">Leaderboard</Link>
+            <Link href="#levels" className="hover:text-foreground">Levels</Link>
+            <Link href="#safety" className="hover:text-foreground">Safety</Link>
+            <Link href="#apps" className="hover:text-foreground">Apps</Link>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/workspace" className="text-sm font-medium hover:text-primary">Demo login</Link>
-            <Button asChild variant="gradient" size="sm">
-              <Link href="/workspace">Launch workspace</Link>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/auth">Login</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/auth">Sign up</Link>
             </Button>
           </div>
         </div>
       </nav>
 
       <section className="gradient-bg-hero border-b">
-        <div className="container grid gap-12 py-16 lg:grid-cols-[1fr,520px] lg:py-20">
+        <div className="container grid gap-10 py-16 lg:grid-cols-[1fr,460px] lg:py-20">
           <div className="flex flex-col justify-center">
+            <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Built with Codex for the OpenAI x Outskill Hackathon
+            </div>
             <h1 className="max-w-4xl font-display text-5xl font-bold tracking-tight text-foreground md:text-6xl">
-              AI awareness and adoption for every institution.
+              Learn AI safely before you use AI seriously.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-              Lakshya AI helps schools and colleges teach AI basics, put AI into daily classroom work, and measure readiness with one clear institutional dashboard.
+              Lakshya AI is a web app for teachers and students to learn AI basics, pass level quizzes, unlock useful AI tools, and build readiness points over time.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild variant="gradient" size="lg">
-                <Link href="/workspace">Launch Lakshya Workspace <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg">
+                <Link href="/auth">Start the web app <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link href="/leaderboard">See the national leaderboard</Link>
+                <Link href="#levels">View learning levels</Link>
               </Button>
             </div>
             <div className="mt-8 grid max-w-2xl gap-3 text-sm text-muted-foreground sm:grid-cols-3">
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Built for Phase 1 MVP</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Powered by OpenAI</div>
-              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Institution-first SaaS</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Teacher and student paths</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> Points and unlocks</div>
+              <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-accent" /> OpenRouter-ready chat</div>
             </div>
           </div>
 
-          <Card className="overflow-hidden border-slate-200 shadow-xl">
-            <div className="border-b bg-slate-950 px-5 py-4 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-white/55">Institution command center</p>
-                  <h2 className="mt-1 font-display text-xl font-semibold">IIMT University AI Readiness</h2>
-                </div>
-                <div className="rounded-md bg-emerald-400/15 px-3 py-1 text-sm text-emerald-200">Live demo</div>
-              </div>
+          <Card className="overflow-hidden shadow-xl">
+            <div className="border-b bg-slate-950 p-5 text-white">
+              <p className="text-xs uppercase tracking-wider text-white/55">Web app preview</p>
+              <h2 className="mt-1 font-display text-2xl font-bold">Level-based AI readiness</h2>
             </div>
             <CardContent className="p-5">
               <div className="grid grid-cols-2 gap-3">
-                {metrics.map((metric) => (
-                  <div key={metric.label} className="rounded-md border bg-slate-50 p-4">
-                    <p className="text-xs text-muted-foreground">{metric.label}</p>
-                    <p className="mt-2 font-display text-3xl font-bold">{metric.value}</p>
-                    <p className="mt-1 text-xs text-accent">{metric.delta}</p>
+                {stats.map((stat) => (
+                  <div key={stat.label} className="rounded-md border bg-slate-50 p-4">
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <p className="mt-2 font-display text-3xl font-bold">{stat.value}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-5 rounded-md border">
-                <div className="flex items-center justify-between border-b px-4 py-3">
-                  <p className="text-sm font-medium">Adoption pipeline</p>
-                  <LineChart className="h-4 w-4 text-primary" />
-                </div>
-                <div className="space-y-3 p-4">
-                  {["Awareness modules", "Teacher AI usage", "Student challenges", "Admin measurement"].map((item, index) => (
-                    <div key={item}>
-                      <div className="mb-1 flex justify-between text-xs">
-                        <span>{item}</span>
-                        <span className="text-muted-foreground">{[86, 74, 68, 78][index]}%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-secondary">
-                        <div className="h-2 rounded-full bg-primary" style={{ width: `${[86, 74, 68, 78][index]}%` }} />
-                      </div>
+              <div className="mt-5 space-y-3">
+                {learningLevels.map((level) => (
+                  <div key={level.level} className="flex items-center justify-between rounded-md border p-3">
+                    <div>
+                      <p className="font-medium">Level {level.level}: {level.title}</p>
+                      <p className="text-xs text-muted-foreground">{level.tools.map((tool) => tool.name).join(", ")}</p>
                     </div>
-                  ))}
-                </div>
+                    {level.level === 1 ? <CheckCircle2 className="h-5 w-5 text-accent" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      <section id="platform" className="container py-16">
+      <section id="levels" className="container py-16">
         <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Platform journey</p>
-          <h2 className="mt-3 font-display text-4xl font-bold tracking-tight">Awareness first. Adoption next. Measurement always.</h2>
+          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Learning system</p>
+          <h2 className="mt-3 font-display text-4xl font-bold tracking-tight">Three levels from awareness to building.</h2>
+          <p className="mt-4 text-muted-foreground">Videos are marked coming soon for now. The web app starts with lessons, tools, quizzes, and point unlocks.</p>
         </div>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {journey.map((step) => (
-            <Card key={step.title}>
+        <div className="mt-8 grid gap-5 lg:grid-cols-3">
+          {learningLevels.map((level) => (
+            <Card key={level.level}>
               <CardContent className="p-6">
-                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <step.icon className="h-5 w-5" />
+                <div className="flex items-center justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary/10 text-primary">
+                    {level.level === 1 ? <BookOpen className="h-5 w-5" /> : level.level === 2 ? <Brain className="h-5 w-5" /> : <GraduationCap className="h-5 w-5" />}
+                  </div>
+                  <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">{level.unlockPoints} pts unlock</span>
                 </div>
-                <h3 className="mt-5 font-display text-xl font-semibold">{step.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">{step.text}</p>
+                <h3 className="mt-5 font-display text-2xl font-bold">Level {level.level}: {level.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{level.subtitle}</p>
+                <div className="mt-5 space-y-2">
+                  {level.topics.slice(0, 4).map((topic) => (
+                    <div key={topic} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-accent" /> {topic}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 rounded-md border bg-slate-50 p-3 text-sm text-muted-foreground">
+                  Tools: {level.tools.map((tool) => tool.name).join(", ")}
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
 
-      <section id="outcome" className="border-y bg-white">
-        <div className="container grid gap-10 py-16 lg:grid-cols-[420px,1fr]">
+      <section id="safety" className="border-y bg-white">
+        <div className="container grid gap-8 py-16 lg:grid-cols-[360px,1fr]">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-primary">What judges should see</p>
-            <h2 className="mt-3 font-display text-4xl font-bold tracking-tight">A working loop that pushes AI use inside education.</h2>
+            <p className="text-sm font-semibold uppercase tracking-wider text-primary">Why awareness first</p>
+            <h2 className="mt-3 font-display text-4xl font-bold tracking-tight">If users do not know AI, they cannot use AI well.</h2>
             <p className="mt-4 leading-7 text-muted-foreground">
-              The prototype is intentionally small: one institution, one teacher toolkit, one student arena, and one admin dashboard. The result is visible movement from AI awareness to AI readiness.
+              Level 1 teaches the base: what AI is, safe usage, good and bad use, prompting, and how AI fits education.
             </p>
-            <Button asChild className="mt-6">
-              <Link href="/workspace">See the result <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
           </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Result icon={GraduationCap} title="Teacher outcome" text="A teacher who did not know prompting can create a usable lesson, quiz, and explainer in minutes." />
-            <Result icon={Brain} title="Student outcome" text="Students practice AI through challenges and receive fast feedback that improves their submissions." />
-            <Result icon={BarChart3} title="Admin outcome" text="Leadership sees adoption metrics instead of guessing whether AI learning is actually happening." />
-            <Result icon={Trophy} title="Motivation layer" text="Leaderboard and readiness scores make progress visible, social, and repeatable." />
+          <div className="grid gap-4 md:grid-cols-3">
+            {safetyPillars.map((pillar) => (
+              <div key={pillar.title} className="rounded-lg border bg-slate-50 p-5">
+                <pillar.icon className="h-5 w-5 text-primary" />
+                <h3 className="mt-4 font-display text-lg font-semibold">{pillar.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{pillar.text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="container grid gap-8 py-16 lg:grid-cols-[1fr,460px]">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Competitive hook</p>
-          <h2 className="mt-3 font-display text-4xl font-bold tracking-tight">Institutions improve faster when progress is visible.</h2>
-          <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">
-            The leaderboard is not the whole product. It is the pressure system that keeps schools and colleges moving after the first awareness session.
-          </p>
-          <div className="mt-6 flex gap-3">
-            <Button asChild variant="outline">
-              <Link href="/leaderboard">Open leaderboard</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/student">Open student arena</Link>
-            </Button>
-          </div>
+      <section id="apps" className="container py-16">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <InfoCard icon={PlayCircle} title="Videos" text="Coming soon: short guided video lessons for each level." />
+          <InfoCard icon={Trophy} title="Leaderboard" text="Coming soon: once real users join, schools and colleges can compare progress." />
+          <InfoCard icon={Download} title="Desktop and mobile apps" text="Coming later. For now, Lakshya AI is focused on the web app." />
         </div>
-        <Card>
-          <CardContent className="p-0">
-            {leaderboard.map((row) => (
-              <div key={row.rank} className={`flex items-center justify-between border-b px-5 py-4 last:border-b-0 ${row.highlight ? "bg-primary/5" : ""}`}>
-                <div className="flex items-center gap-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary font-display font-bold">#{row.rank}</div>
-                  <div>
-                    <p className={row.highlight ? "font-medium text-primary" : "font-medium"}>{row.name}</p>
-                    <p className="text-xs text-muted-foreground">{row.highlight ? "Pilot institution" : "Active institution"}</p>
-                  </div>
-                </div>
-                <p className="font-mono font-semibold">{row.score.toLocaleString()}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
       </section>
 
       <section className="border-t bg-slate-950 text-white">
         <div className="container flex flex-col items-start justify-between gap-6 py-12 md:flex-row md:items-center">
           <div>
-            <h2 className="font-display text-3xl font-bold">Ready for the Phase 1 demo.</h2>
-            <p className="mt-2 text-white/65">Show awareness, usage, measurement, and the result in under three minutes.</p>
+            <h2 className="font-display text-3xl font-bold">Start with the web app.</h2>
+            <p className="mt-2 text-white/65">Signup, choose teacher or student, complete Level 1, and unlock tools.</p>
           </div>
           <Button asChild variant="gradient" size="lg">
-            <Link href="/login"><PlayCircle className="mr-2 h-4 w-4" /> Start demo flow</Link>
+            <Link href="/auth">Create account</Link>
           </Button>
         </div>
       </section>
@@ -229,12 +171,14 @@ export default function LandingPage() {
   );
 }
 
-function Result({ icon: Icon, title, text }: { icon: typeof Users; title: string; text: string }) {
+function InfoCard({ icon: Icon, title, text }: { icon: typeof ShieldCheck; title: string; text: string }) {
   return (
-    <div className="rounded-lg border bg-slate-50 p-5">
-      <Icon className="h-5 w-5 text-primary" />
-      <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
-    </div>
+    <Card>
+      <CardContent className="p-6">
+        <Icon className="h-5 w-5 text-primary" />
+        <h3 className="mt-4 font-display text-xl font-semibold">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
+      </CardContent>
+    </Card>
   );
 }
