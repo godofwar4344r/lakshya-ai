@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Component } from "react";
 import Link from "next/link";
-import { ArrowLeft, Bot, CheckCircle2, ChevronRight, Clock, GraduationCap, Lock, LogOut, MessageSquare, PlayCircle, Send, Sparkles, Trophy, Loader2, X, Plus, Mic, Image as ImageIcon, FileText, Globe, ChevronDown } from "lucide-react";
+import { ArrowLeft, Bot, CheckCircle2, ChevronRight, Clock, GraduationCap, Lock, LogOut, MessageSquare, PlayCircle, Send, Sparkles, Trophy, Loader2, X, Plus, Mic, Image as ImageIcon, FileText, Globe, ChevronDown, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { learningLevels, levelOneQuestions, quizRules, roleCopy, type UserRole } from "@/lib/curriculum";
@@ -45,6 +45,67 @@ const PHYSICS_STUDENT_TEMPLATES = [
     response: "### Student AI Policy: Ethics Guide\n\nUsing AI tools like ChatGPT or Gemini is a great way to study, but there is a clear boundary between using AI as a tutor and cheating.\n\n#### Recommended Dos:\n* **The Explainer Check:** Ask AI to 'explain this topic to a 10-year-old' or 'give me 3 real-world analogies.'\n* **Practice Feedback:** Paste your handwritten answer and ask, 'I wrote this answer. What CBSE grading criteria did I miss?'\n* **Formula Derivations:** Ask AI to break down difficult math steps in equations.\n\n#### Avoid:\n* **Direct Copy-Paste:** Submitting AI-generated paragraphs as your own homework. Your teachers know your vocabulary and style, and can easily tell.\n* **Blind Trust:** AI can make math errors ('hallucinations'). Always double-check numerical outputs with your textbook formulas."
   }
 ];
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class SafeErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="max-w-md w-full bg-white border border-zinc-200 rounded-2xl shadow-2xl p-6 text-center space-y-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-600 mx-auto">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <h2 className="font-display text-xl font-bold text-zinc-900">Application Exception</h2>
+            <p className="text-sm text-slate-500 leading-relaxed font-sans">
+              An unexpected client-side error occurred. Don&apos;t worry, you can dismiss this popup to continue using other features, or reload the workspace.
+            </p>
+            <div className="bg-slate-50 rounded-lg p-3 text-left text-xs font-mono text-rose-650 border border-slate-200/60 break-all max-h-[100px] overflow-y-auto">
+              {this.state.error?.message || "Unknown rendering exception"}
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="flex-1 bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary/90 text-sm transition"
+              >
+                Reload Page
+              </button>
+              <button
+                onClick={() => this.setState({ hasError: false, error: null })}
+                className="flex-1 border border-zinc-200 text-zinc-700 font-semibold py-2 rounded-lg hover:bg-slate-50 text-sm transition"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Helper to parse basic inline markdown formatting like bold text and code snippets
 function parseInlineMarkdown(text: string): React.ReactNode[] {
@@ -155,8 +216,8 @@ export default function WorkspacePage() {
         .maybeSingle();
 
       if (profile) {
-        setProfileName(profile.full_name);
-        setRole(profile.role as UserRole);
+        setProfileName(profile.full_name || "Demo learner");
+        setRole((profile.role as UserRole) || "student");
         setPoints(profile.points ?? 0);
       } else {
         const nextRole = metadataRole === "teacher" ? "teacher" : "student";
@@ -187,27 +248,38 @@ export default function WorkspacePage() {
 
   const quizComplete = Object.keys(answers).length === levelOneQuestions.length;
 
-  function submitQuiz() {
+  async function submitQuiz() {
     if (!quizComplete || quizTaken) return;
     const earned = 40 + score * 20;
     setPoints((value) => value + earned);
     setQuizTaken(true);
 
-    if (userId) {
-      const supabase = createClient();
-      supabase.from("quiz_attempts").insert({
-        user_id: userId,
-        level: 1,
-        score,
-        max_score: levelOneQuestions.length,
-        points_awarded: earned,
-      });
-      supabase.from("point_events").insert({
-        user_id: userId,
-        event_type: "quiz_passed",
-        points: earned,
-        metadata: { level: 1, score, max_score: levelOneQuestions.length },
-      });
+    if (!userId) return;
+
+    // Persist the quiz attempt and the points event together so the
+    // refresh_profile_points() trigger recomputes the canonical points total.
+    const supabase = createClient();
+    try {
+      const [attempt, event] = await Promise.all([
+        supabase.from("quiz_attempts").insert({
+          user_id: userId,
+          level: 1,
+          score,
+          max_score: levelOneQuestions.length,
+          points_awarded: earned,
+        }),
+        supabase.from("point_events").insert({
+          user_id: userId,
+          event_type: "quiz_passed",
+          points: earned,
+          metadata: { level: 1, score, max_score: levelOneQuestions.length },
+        }),
+      ]);
+      if (attempt.error) console.warn("quiz_attempts insert failed:", attempt.error.message);
+      if (event.error) console.warn("point_events insert failed:", event.error.message);
+    } catch (err) {
+      console.warn("submitQuiz persistence failed:", err);
+      // Optimistic UI keeps the points the user earned this session.
     }
   }
 
@@ -264,7 +336,8 @@ export default function WorkspacePage() {
   }
 
   return (
-    <main className="min-h-screen app-shell">
+    <SafeErrorBoundary>
+      <main className="min-h-screen app-shell">
       <header className="border-b bg-white">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-sm hover:opacity-80">
@@ -370,9 +443,9 @@ export default function WorkspacePage() {
           <div className="rounded-xl border bg-slate-950 p-6 text-white">
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
               <div>
-                <p className="text-sm font-semibold text-emerald-300">{roleCopy[role].label} path</p>
-                <h1 className="mt-2 font-display text-3xl font-bold">{roleCopy[role].heading}</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">{roleCopy[role].description}</p>
+                <p className="text-sm font-semibold text-emerald-300">{roleCopy[role]?.label || (role === "teacher" ? "Teacher" : "Student")} path</p>
+                <h1 className="mt-2 font-display text-3xl font-bold">{roleCopy[role]?.heading || (role === "teacher" ? "Teach AI safely, then use it in classroom work." : "Learn AI, practice AI, then build with AI.")}</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">{roleCopy[role]?.description || (role === "teacher" ? "Progress from AI basics to lesson support, research workflows, and builder-level classroom tools." : "Use the levels to understand safe AI use, improve study workflows, and unlock builder tools.")}</p>
               </div>
               <Button variant="gradient" onClick={() => setTab("quiz")}>Take weekly quiz</Button>
             </div>
@@ -791,5 +864,6 @@ export default function WorkspacePage() {
         </section>
       </div>
     </main>
+  </SafeErrorBoundary>
   );
 }
